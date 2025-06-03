@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marine Pharmacology: A Strategic Blueprint for Barbados & The Eastern Caribbean</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Oceanic Neutrals" -->
+    <!-- Application Structure Plan: The SPA is designed as a thematic, multi-section dashboard to make the dense report digestible. The structure guides the user from the high-level "Opportunity" (hooking them with market data), to the "Framework" (explaining complex ABS concepts interactively), to "Case Studies" (providing real-world proof), to the "Roadmap" (presenting actionable recommendations), and finally the "Economic Outlook" (visualizing the potential). This non-linear, thematic approach allows users to explore sections based on interest, enhancing understanding and engagement better than a simple linear scroll of the original report. -->
+    <!-- Visualization & Content Choices:
+        1. Report Info: Global marine drug market projections. Goal: Inform/Compare. Viz: Bar Chart (Chart.js) with tooltips. Justification: Clearly shows growth trends.
+        2. Report Info: Monetary vs. Non-Monetary Benefits. Goal: Compare/Persuade. Viz: Donut Chart (Chart.js) with interactive text blocks. Interaction: Clicking slices updates text, highlighting the report's key argument for prioritizing non-monetary benefits. Justification: Makes a central, complex argument interactive and memorable.
+        3. Report Info: Case Studies. Goal: Organize/Compare. Viz: Tabbed interface with info cards. Interaction: User clicks tabs to switch between case studies. Justification: A clean, user-controlled way to compare different ABS models without overwhelming vertical space.
+        4. Report Info: Recommendations for Barbados. Goal: Organize/Inform. Viz: Multi-column layout with icons (HTML/Tailwind). Justification: Highly scannable and actionable format for strategic advice.
+        5. LLM Integration: Deep Dive into Case Studies. Goal: Provide detailed, on-demand information. Viz: Text generation. Interaction: Button click triggers LLM call, displaying detailed terms, royalties, conditions, and duration for selected case study. Justification: Directly addresses user's initial request for specific ABS agreement details.
+        6. LLM Integration: Roadmap Action Plan. Goal: Generate actionable steps. Viz: Text generation. Interaction: Button click triggers LLM call, providing a detailed action plan based on the roadmap recommendations. Justification: Enhances the "Roadmap" section by turning recommendations into concrete steps.
+        7. LLM Integration: Economic Scenario. Goal: Explore potential economic impacts. Viz: Text generation. Interaction: Button click triggers LLM call, generating a hypothetical economic scenario for Barbados/Eastern Caribbean. Justification: Adds a dynamic layer to the "Economic Outlook" by providing speculative but informed scenarios.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #1a202c;
+        }
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+            color: #E2E8F0;
+        }
+        .nav-link:hover {
+            color: #FFFFFF;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #C4A484;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background-color: #0D2F4F;
+            color: #FFFFFF;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0D2F4F;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-[#F8F7F4] text-gray-800">
+
+    <header class="bg-[#0D2F4F] sticky top-0 z-50 shadow-md">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-xl font-bold text-white">
+                <span class="text-[#C4A484]">Blue</span>Economy Blueprint
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#opportunity" class="nav-link active">Opportunity</a>
+                <a href="#framework" class="nav-link">Framework</a>
+                <a href="#cases" class="nav-link">Case Studies</a>
+                <a href="#roadmap" class="nav-link">Roadmap</a>
+                <a href="#economic" class="nav-link">Outlook</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#opportunity" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Opportunity</a>
+            <a href="#framework" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Framework</a>
+            <a href="#cases" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Case Studies</a>
+            <a href="#roadmap" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Roadmap</a>
+            <a href="#economic" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Outlook</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="opportunity" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-[#0D2F4F] mb-4">The Ocean's Untapped Potential</h1>
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">
+                    For Barbados and the Eastern Caribbean, the vast marine environment represents a new economic frontier. This report outlines a strategic blueprint to leverage marine genetic resources for drug discovery, fostering a sustainable blue economy through Access and Benefit Sharing (ABS).
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div class="card p-6">
+                        <p class="text-4xl font-bold text-[#5D8AA8] mb-2">$4.3B+</p>
+                        <h3 class="text-lg font-semibold text-[#0D2F4F]">Projected Market by 2030</h3>
+                        <p class="text-sm text-gray-500">The global marine-derived drugs market is on a steep growth trajectory.</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="text-4xl font-bold text-[#5D8AA8] mb-2">&lt;1%</p>
+                        <h3 class="text-lg font-semibold text-[#0D2F4F]">Microbial Life Discovered</h3>
+                        <p class="text-sm text-gray-500">An immense ocean of biodiversity remains unexplored, holding keys to new medicines.</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="text-4xl font-bold text-[#5D8AA8] mb-2">430x</p>
+                        <h3 class="text-lg font-semibold text-[#0D2F4F]">Ocean vs. Land Area</h3>
+                        <p class="text-sm text-gray-500">Barbados's strategic shift to a "large-ocean state" unlocks vast natural capital.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="framework" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#0D2F4F]">The ABS Framework Explained</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Access and Benefit Sharing (ABS) ensures that the benefits from genetic resources are shared fairly and equitably. This section breaks down the core concepts of the Nagoya Protocol, the international agreement governing ABS.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="card p-8 text-center">
+                        <div class="text-3xl mb-4">📜</div>
+                        <h3 class="text-xl font-bold text-[#0D2F4F] mb-2">Prior Informed Consent (PIC)</h3>
+                        <p class="text-gray-600">Provider countries must give explicit permission *before* their genetic resources are accessed. This ensures national sovereignty over natural assets.</p>
+                    </div>
+                    <div class="card p-8 text-center">
+                        <div class="text-3xl mb-4">🤝</div>
+                        <h3 class="text-xl font-bold text-[#0D2F4F] mb-2">Mutually Agreed Terms (MAT)</h3>
+                        <p class="text-gray-600">A clear, negotiated contract between the resource provider and the user, outlining the specific terms of use and how benefits will be shared.</p>
+                    </div>
+                    <div class="card p-8 text-center md:col-span-2 lg:col-span-1">
+                        <div class="text-3xl mb-4">⚖️</div>
+                        <h3 class="text-xl font-bold text-[#0D2F4F] mb-2">Intellectual Property (IP)</h3>
+                        <p class="text-gray-600">ABS agreements must clearly define IP ownership and licensing, determining who controls future development and commercialization of discoveries.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cases" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#0D2F4F]">Case Studies in Action</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">ABS isn't just theory. This section explores how different organizations and countries have structured benefit-sharing agreements, offering valuable lessons for the Caribbean.</p>
+                </div>
+                <div>
+                    <div class="mb-8 flex flex-wrap justify-center gap-2">
+                        <button class="tab-btn active text-gray-700 font-semibold py-2 px-5 rounded-full bg-gray-200" data-tab="costa-rica">Costa Rica & Merck</button>
+                        <button class="tab-btn text-gray-700 font-semibold py-2 px-5 rounded-full bg-gray-200" data-tab="philippines">Philippines & GEF</button>
+                        <button class="tab-btn text-gray-700 font-semibold py-2 px-5 rounded-full bg-gray-200" data-tab="basecamp">Basecamp Research</button>
+                    </div>
+                    <div id="case-study-content" class="card p-8 max-w-4xl mx-auto min-h-[300px]">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#0D2F4F]">A Strategic Roadmap for the Caribbean</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">To successfully enter the marine pharmacology market, Barbados and its neighbors should pursue a multi-pronged strategy. Here are the key recommendations derived from the report.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="card p-6">
+                        <div class="text-2xl mb-3">🏛️</div>
+                        <h3 class="text-lg font-bold mb-2 text-[#0D2F4F]">Policy & Governance</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 text-sm">
+                            <li>Ratify Nagoya Protocol</li>
+                            <li>Streamline PIC/MAT processes</li>
+                            <li>Develop policy for Digital Sequence Info (DSI)</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-2xl mb-3">🔬</div>
+                        <h3 class="text-lg font-bold mb-2 text-[#0D2F4F]">Capacity & Infrastructure</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 text-sm">
+                            <li>Invest in marine science research</li>
+                            <li>Develop local labs via technology transfer</li>
+                            <li>Train local scientists and legal experts</li>
+                            <li>Build IP management expertise</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-2xl mb-3">💰</div>
+                        <h3 class="text-lg font-bold mb-2 text-[#0D2F4F]">Benefit Sharing & Investment</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 text-sm">
+                            <li>Prioritize non-monetary benefits</li>
+                            <li>Negotiate robust, specific MATs</li>
+                            <li>Seek multilateral funding (GEF, World Bank)</li>
+                            <li>Explore innovative finance like Blue Bonds</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-2xl mb-3">🌐</div>
+                        <h3 class="text-lg font-bold mb-2 text-[#0D2F4F]">Regional Synergy</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 text-sm">
+                            <li>Harmonize regional ABS policies</li>
+                            <li>Create shared research hubs</li>
+                            <li>Enhance collective negotiation power</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-center mt-12">
+                    <button id="generate-roadmap-action-plan" class="bg-[#C4A484] hover:bg-[#A8886A] text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                        Generate Action Plan ✨
+                    </button>
+                    <div id="roadmap-action-plan-output" class="mt-8 p-6 bg-gray-50 rounded-lg max-w-4xl mx-auto text-left hidden">
+                        <div class="loading-spinner hidden"></div>
+                        <div class="generated-content text-gray-700 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="economic" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-[#0D2F4F]">Economic Outlook & Value Proposition</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Participating in this market offers substantial long-term value. While direct monetary returns are uncertain, the immediate, tangible value comes from strategic non-monetary benefits that build a resilient foundation for economic diversification.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-center text-[#0D2F4F] mb-4">Global Market Growth Projections (USD Billions)</h3>
+                        <div class="chart-container">
+                            <canvas id="marketGrowthChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-xl font-bold text-center text-[#0D2F4F] mb-4">The Value Proposition: A Strategic View</h3>
+                        <div class="chart-container w-full max-w-xs h-auto">
+                            <canvas id="benefitTypeChart"></canvas>
+                        </div>
+                        <div id="benefit-text-display" class="mt-6 p-6 bg-gray-50 rounded-lg max-w-md text-center">
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-12">
+                    <button id="generate-economic-scenario" class="bg-[#C4A484] hover:bg-[#A8886A] text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                        Generate Economic Scenario ✨
+                    </button>
+                    <div id="economic-scenario-output" class="mt-8 p-6 bg-gray-50 rounded-lg max-w-4xl mx-auto text-left hidden">
+                        <div class="loading-spinner hidden"></div>
+                        <div class="generated-content text-gray-700 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-[#0D2F4F] text-gray-300 py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>This interactive report is a synthesized summary based on "A Strategic Blueprint for Barbados and the Eastern Caribbean."</p>
+            <p class="text-sm mt-2">Designed to facilitate understanding of key concepts in Access and Benefit Sharing for marine pharmacology.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const caseStudies = {
+                'costa-rica': {
+                    title: 'Costa Rica & Merck (1991) - The Landmark Deal',
+                    focus: 'This pioneering agreement moved beyond a simple focus on royalties, which are uncertain and long-term.',
+                    benefits: [
+                        'Substantial upfront payment of US$1 million.',
+                        'Significant technology transfer and infrastructure development.',
+                        'Fully funded local research budgets.',
+                        'Provisions for future milestone and royalty payments.'
+                    ],
+                    lesson: 'Prioritizing a holistic benefit package including immediate, non-monetary benefits de-risks participation and builds sustainable capacity.',
+                    llmPrompt: `Provide a detailed summary of the Access and Benefit Sharing (ABS) agreement between Costa Rica and Merck (1991). Specifically, include:
+                        1. High-level terms of the deal.
+                        2. Royalty-sharing levels agreed to (if publicly available or typical for such deals).
+                        3. Requirements that underpinned the level of royalty-sharing.
+                        4. Term of the agreement.
+                        5. Conditions (e.g., Nagoya Protocol compliance) the country was responsible for.
+                        Focus on publicly available information and typical ABS practices for that era if specific details are not known.`
+                },
+                'philippines': {
+                    title: 'Philippines & GEF - Building the Foundation',
+                    focus: 'This project focuses on building the enabling environment for future successful ABS agreements, rather than being a direct bioprospecting deal.',
+                    benefits: [
+                        'Strengthening the national ABS legal framework.',
+                        'Building capacity for national agencies and local communities to negotiate.',
+                        'Facilitating the negotiation of at least one national ABS agreement.',
+                        'Developing bio-products from local genetic resources.'
+                    ],
+                    lesson: 'International development funds are crucial for de-risking the initial stages of ABS implementation and building essential national capacity.',
+                    llmPrompt: `Provide a detailed summary of the Access and Benefit Sharing (ABS) project involving the Philippines and the Global Environment Facility (GEF). Specifically, include:
+                        1. High-level terms of the project.
+                        2. How benefit-sharing was structured (monetary/non-monetary).
+                        3. Requirements that underpinned the benefit-sharing.
+                        4. Term of the project.
+                        5. Conditions (e.g., Nagoya Protocol compliance) the country was responsible for.`
+                },
+                'basecamp': {
+                    title: 'Basecamp Research - The Modern Approach',
+                    focus: 'Basecamp Research\'s model is built on cutting-edge DNA and AI technologies, with a strong emphasis on digital sequence information (DSI).',
+                    benefits: [
+                        'Royalties on net revenue from commercialization, including from AI-designed proteins.',
+                        'Technology transfer, including mobile DNA labs and training.',
+                        'Data sharing, including sample composition and taxonomic data.',
+                        'Involvement of local communities in the sampling and processing workforce.'
+                    ],
+                    lesson: 'Future ABS frameworks must address Digital Sequence Information (DSI) to capture value from modern biotechnology and prevent digital biopiracy.',
+                    llmPrompt: `Provide a detailed summary of Basecamp Research's Access and Benefit Sharing (ABS) model. Specifically, include:
+                        1. High-level terms of their typical agreements.
+                        2. Royalty-sharing levels or other benefit-sharing mechanisms.
+                        3. Requirements that underpin their benefit-sharing model.
+                        4. Typical term of their agreements or ongoing nature.
+                        5. Conditions (e.g., Nagoya Protocol compliance, DSI) the partner country is responsible for.`
+                }
+            };
+
+            const benefitTexts = {
+                nonMonetary: {
+                    title: 'Focus: Non-Monetary Benefits (Strategic & Immediate)',
+                    description: 'The report strongly recommends prioritizing non-monetary benefits. They provide immediate, tangible, and predictable value that builds a foundation for long-term self-sufficiency. This de-risks participation in bioprospecting and moves the nation up the value chain.',
+                    examples: ['Technology Transfer', 'Local Training', 'Joint R&D', 'Infrastructure']
+                },
+                monetary: {
+                    title: 'Focus: Monetary Benefits (High-Risk & Long-Term)',
+                    description: 'While potentially lucrative, monetary benefits like royalties are inherently high-risk, uncertain, and long-term. Drug discovery can take 10-15 years with a high failure rate. Relying solely on these can lead to disappointment.',
+                    examples: ['Royalties', 'Upfront Payments', 'Milestone Payments', 'Licensing Fees']
+                }
+            };
+
+            const caseStudyContentEl = document.getElementById('case-study-content');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            let currentCaseStudyTab = 'costa-rica'; // Track the currently active tab
+
+            function updateCaseStudy(tabId) {
+                currentCaseStudyTab = tabId; // Update the active tab
+                const content = caseStudies[tabId];
+                caseStudyContentEl.innerHTML = `
+                    <h3 class="text-2xl font-bold text-[#0D2F4F] mb-4">${content.title}</h3>
+                    <p class="text-gray-700 font-semibold mb-2">Focus:</p>
+                    <p class="text-gray-600 mb-4">${content.focus}</p>
+                    <p class="text-gray-700 font-semibold mb-2">Key Benefits:</p>
+                    <ul class="list-disc list-inside text-gray-600 mb-4 space-y-1">
+                        ${content.benefits.map(b => `<li>${b}</li>`).join('')}
+                    </ul>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-gray-700 font-semibold mb-2">Key Lesson:</p>
+                        <p class="text-[#0D2F4F] italic">${content.lesson}</p>
+                    </div>
+                    <div class="text-center mt-6">
+                        <button id="deep-dive-btn" class="bg-[#5D8AA8] hover:bg-[#4A7C9B] text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                            Deep Dive into Agreement ✨
+                        </button>
+                    </div>
+                    <div id="deep-dive-output" class="mt-6 p-4 bg-blue-50 rounded-lg text-left hidden">
+                        <div class="loading-spinner hidden"></div>
+                        <div class="generated-content text-gray-700 leading-relaxed"></div>
+                    </div>
+                `;
+                document.getElementById('deep-dive-btn').addEventListener('click', () => generateDeepDive(currentCaseStudyTab));
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateCaseStudy(button.dataset.tab);
+                });
+            });
+
+            updateCaseStudy('costa-rica');
+
+            const marketCtx = document.getElementById('marketGrowthChart').getContext('2d');
+            new Chart(marketCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2022 Value', '2030 Projection', '2032 Projection'],
+                    datasets: [{
+                        label: 'Market Value (USD Billions)',
+                        data: [2.56, 4.31, 61.89],
+                        backgroundColor: ['#5D8AA8', '#5D8AA8', '#C4A484'],
+                        borderColor: ['#0D2F4F'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y) + 'B';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'USD Billions'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const benefitTextDisplay = document.getElementById('benefit-text-display');
+            const benefitCtx = document.getElementById('benefitTypeChart').getContext('2d');
+            const benefitChart = new Chart(benefitCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Non-Monetary Benefits (Strategic Priority)', 'Monetary Benefits (Long-Term Potential)'],
+                    datasets: [{
+                        data: [75, 25],
+                        backgroundColor: ['#0D2F4F', '#C4A484'],
+                        borderColor: '#FFFFFF',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 20,
+                                padding: 20
+                            }
+                        },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+
+            function updateBenefitText(data) {
+                 benefitTextDisplay.innerHTML = `
+                    <h4 class="text-lg font-bold text-[#0D2F4F]">${data.title}</h4>
+                    <p class="text-gray-600 text-sm my-2">${data.description}</p>
+                    <div class="flex flex-wrap justify-center gap-2 mt-3">
+                        ${data.examples.map(ex => `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${ex}</span>`).join('')}
+                    </div>
+                 `;
+            }
+
+            updateBenefitText(benefitTexts.nonMonetary);
+
+            document.getElementById('benefitTypeChart').onclick = (evt) => {
+                const activePoints = benefitChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+                if(activePoints.length) {
+                    const firstPoint = activePoints[0];
+                    if (firstPoint.index === 0) {
+                        updateBenefitText(benefitTexts.nonMonetary);
+                    } else {
+                         updateBenefitText(benefitTexts.monetary);
+                    }
+                }
+            };
+
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link, #mobile-menu a');
+            const sections = document.querySelectorAll('main section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.nav-link').forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                   if (mobileMenu.classList.contains('hidden') === false) {
+                       mobileMenu.classList.add('hidden');
+                   }
+                });
+            });
+
+            // LLM Integration Functions
+            async function callGeminiAPI(prompt, outputElement) {
+                outputElement.classList.remove('hidden');
+                const loadingSpinner = outputElement.querySelector('.loading-spinner');
+                const generatedContentDiv = outputElement.querySelector('.generated-content');
+
+                loadingSpinner.classList.remove('hidden');
+                generatedContentDiv.innerHTML = '';
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        generatedContentDiv.innerHTML = text.replace(/\n/g, '<br>'); // Preserve newlines
+                    } else {
+                        generatedContentDiv.innerHTML = 'Error: Could not generate content. Please try again.';
+                    }
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    generatedContentDiv.innerHTML = 'Error: Failed to connect to the AI service. Please check your network connection.';
+                } finally {
+                    loadingSpinner.classList.add('hidden');
+                }
+            }
+
+            async function generateDeepDive(tabId) {
+                const prompt = caseStudies[tabId].llmPrompt;
+                const outputElement = document.getElementById('deep-dive-output');
+                await callGeminiAPI(prompt, outputElement);
+            }
+
+            const generateRoadmapBtn = document.getElementById('generate-roadmap-action-plan');
+            const roadmapOutput = document.getElementById('roadmap-action-plan-output');
+
+            generateRoadmapBtn.addEventListener('click', async () => {
+                const roadmapPoints = [
+                    "Ratify Nagoya Protocol and develop robust national ABS legislation.",
+                    "Streamline Prior Informed Consent (PIC) and Mutually Agreed Terms (MAT) processes for efficiency and clarity.",
+                    "Develop clear policy and legal frameworks for Digital Sequence Information (DSI) to capture value from genetic data.",
+                    "Invest significantly in marine science research infrastructure and equipment.",
+                    "Foster technology transfer to establish and equip local marine biotechnology labs.",
+                    "Implement comprehensive training programs for local scientists, legal experts, and negotiators in ABS and marine bioprospecting.",
+                    "Build expertise in intellectual property (IP) management and patenting within the country.",
+                    "Prioritize non-monetary benefits (e.g., capacity building, technology transfer, joint research) in ABS negotiations to build sustainable value.",
+                    "Negotiate robust, specific, and enforceable Mutually Agreed Terms (MATs) for all bioprospecting activities.",
+                    "Actively seek multilateral funding from organizations like the Global Environment Facility (GEF) and the World Bank for ABS capacity building and projects.",
+                    "Explore innovative finance mechanisms like Blue Bonds to fund marine research and conservation efforts linked to bioprospecting.",
+                    "Harmonize regional ABS policies and regulations across Eastern Caribbean countries.",
+                    "Create shared marine research hubs and data repositories within the region to leverage collective resources.",
+                    "Enhance collective negotiation power by forming regional blocs for ABS agreements."
+                ];
+                const prompt = `Based on the following strategic roadmap points for Barbados and the Eastern Caribbean to enter the marine pharmacology market, generate a detailed, actionable plan. For each point, suggest 2-3 concrete steps, responsible entities (e.g., Government Ministry, Research Institute, Regional Body), and a suggested timeline (e.g., Short-term: 0-1 year, Mid-term: 1-3 years, Long-term: 3-5+ years).
+
+                Roadmap Points:
+                ${roadmapPoints.map((point, index) => `${index + 1}. ${point}`).join('\n')}
+
+                Format the output clearly with headings for each roadmap point and bullet points for the action steps, entities, and timelines.`;
+                await callGeminiAPI(prompt, roadmapOutput);
+            });
+
+            const generateEconomicScenarioBtn = document.getElementById('generate-economic-scenario');
+            const economicScenarioOutput = document.getElementById('economic-scenario-output');
+
+            generateEconomicScenarioBtn.addEventListener('click', async () => {
+                const prompt = `Based on the global marine-derived drugs market projections (2022: $2.56B, 2030: $4.31B, 2032: $61.89B - note the significant jump due to potential breakthroughs), and the strategic emphasis on non-monetary benefits (75% priority) over monetary benefits (25% priority) for Barbados and the Eastern Caribbean, generate a hypothetical economic scenario for the region's participation in the marine pharmacology market over the next 10-15 years.
+
+                The scenario should:
+                1. Describe the key non-monetary benefits realized (e.g., new research institutes, skilled workforce, technology transfer).
+                2. Discuss the potential for monetary benefits, acknowledging their high-risk and long-term nature, perhaps mentioning a hypothetical breakthrough and its impact.
+                3. Outline the overall economic impact on GDP, job creation, and diversification of the economy for Barbados and potentially the wider Eastern Caribbean.
+                4. Emphasize the long-term, sustainable growth driven by capacity building.
+                5. Conclude with a summary of the overall value proposition.
+
+                Present this as a narrative scenario, focusing on the positive, transformative impact, while remaining realistic about the challenges.`;
+                await callGeminiAPI(prompt, economicScenarioOutput);
+            });
+        });
+    </script>
+</body>
+</html>
