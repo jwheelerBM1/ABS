@@ -123,6 +123,12 @@
             <a href="#roadmap" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Roadmap</a>
             <a href="#economic" class="block py-2 px-4 text-sm text-gray-200 hover:bg-[#5D8AA8]">Outlook</a>
         </div>
+        <div class="bg-[#0D2F4F] py-2 px-6">
+            <div class="container mx-auto flex flex-col md:flex-row items-center justify-end">
+                <label for="api-key-input" class="text-white text-sm mr-2 mb-2 md:mb-0">Gemini API Key (for GitHub deployment):</label>
+                <input type="password" id="api-key-input" placeholder="Enter your API key here" class="p-1 rounded-md text-sm w-full md:w-64 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C4A484]">
+            </div>
+        </div>
     </header>
 
     <main>
@@ -558,10 +564,18 @@
                 loadingSpinner.classList.remove('hidden');
                 generatedContentDiv.innerHTML = '';
 
+                const apiKeyInput = document.getElementById('api-key-input');
+                const apiKey = apiKeyInput ? apiKeyInput.value.trim() : ''; // Safely get value
+
+                if (!apiKey) {
+                    generatedContentDiv.innerHTML = '<p class="text-red-600">Please enter your Gemini API key above to use this feature.</p>';
+                    loadingSpinner.classList.add('hidden');
+                    return;
+                }
+
                 let chatHistory = [];
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                 const payload = { contents: chatHistory };
-                const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 try {
@@ -577,11 +591,11 @@
                         const text = result.candidates[0].content.parts[0].text;
                         generatedContentDiv.innerHTML = text.replace(/\n/g, '<br>'); // Preserve newlines
                     } else {
-                        generatedContentDiv.innerHTML = 'Error: Could not generate content. Please try again.';
+                        generatedContentDiv.innerHTML = 'Error: Could not generate content. Please try again. Check your API key and network connection.';
                     }
                 } catch (error) {
                     console.error('Error calling Gemini API:', error);
-                    generatedContentDiv.innerHTML = 'Error: Failed to connect to the AI service. Please check your network connection.';
+                    generatedContentDiv.innerHTML = 'Error: Failed to connect to the AI service. Please check your network connection and ensure your API key is correct.';
                 } finally {
                     loadingSpinner.classList.add('hidden');
                 }
